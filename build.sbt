@@ -8,17 +8,22 @@ enablePlugins(JavaAppPackaging)
 lazy val root =
   project
     .in(file("."))
+    .settings(
+      mainClass in Compile := Some("io.timmers.farmer.Application")
+    )
     .aggregate(farmerApi, zioCqrs)
+    .dependsOn(farmerApi, zioCqrs)
+
+lazy val farmerApi =
+  module("farmer-api", "farmer-api")
+    .settings(
+      libraryDependencies ++= Seq(
+        "io.d11" %% "zhttp" % zioHttpVersion
+      )
+    )
+    .dependsOn(zioCqrs)
 
 lazy val zioCqrs = module("cqrs", "zio-cqrs")
-
-lazy val farmerApi = module("farmer-api", "farmer-api")
-  .settings(
-    libraryDependencies ++= Seq(
-      "io.d11" %% "zhttp" % zioHttpVersion
-    )
-  )
-  .dependsOn(zioCqrs)
 
 def module(moduleName: String, fileName: String): Project =
   Project(moduleName, file(fileName))
@@ -35,7 +40,7 @@ def module(moduleName: String, fileName: String): Project =
         "dev.zio" %% "zio" % zioVersion
       ),
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio-test"     % zioVersion % Test,
+        "dev.zio" %% "zio-test" % zioVersion % Test,
         "dev.zio" %% "zio-test-sbt" % zioVersion % Test
       ),
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
