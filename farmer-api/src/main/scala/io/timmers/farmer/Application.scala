@@ -10,5 +10,8 @@ object Application extends App {
   }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
-    Server.start(8090, app).exitCode
+    system.envOrElse("PORT", "8080")
+      .map(_.toInt)
+      .flatMap(port => Server.start(port, app))
+      .exitCode
 }
