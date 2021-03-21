@@ -1,7 +1,7 @@
 package io.timmers.cqrs
 
 import zio.test.Assertion.{ equalTo, hasSize, nothing }
-import zio.test.{ assert, Assertion, TestResult }
+import zio.test.{ Assertion, TestResult, assert }
 import zio.{ Ref, Tag, UIO, ZEnv, ZIO, ZLayer }
 
 package object test {

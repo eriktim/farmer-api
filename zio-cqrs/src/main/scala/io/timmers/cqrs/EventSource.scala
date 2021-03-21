@@ -11,7 +11,7 @@ trait EventSource[E] {
 object EventSource {
   def apply[E](implicit eventSource: EventSource[E]): EventSource[E] = eventSource
 
-  implicit class EventSourceOps[E](val event: E) extends AnyVal {
+  implicit class EventSourceOps[E](private val event: E) extends AnyVal {
     def streamType(implicit eventSource: EventSource[E]): String =
       eventSource.streamType
 
