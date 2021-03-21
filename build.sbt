@@ -41,7 +41,8 @@ def module(moduleName: String, fileName: String): Project =
         "-Xfatal-warnings"
       ),
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio" % zioVersion
+        "dev.zio" %% "zio"         % zioVersion,
+        "dev.zio" %% "zio-streams" % zioVersion
       ),
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio-test"     % zioVersion % Test,
