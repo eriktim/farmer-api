@@ -1,9 +1,9 @@
 package io.timmers.cqrs
 
-import zio.clock.{ currentTime, Clock }
-import zio.{ Tag, ZIO }
-
 import java.util.concurrent.TimeUnit
+
+import zio.clock.{ Clock, currentTime }
+import zio.{ Tag, ZIO }
 
 trait Aggregate[C <: Command, S, E <: Event.Payload] {
   def sendCommand(command: C): ZIO[EventStore.EventStore[E] with Clock, String, S]
@@ -41,9 +41,9 @@ object Aggregate {
 
     private def readState(aggregateId: String): ZIO[EventStore.EventStore[E], String, (Long, S)] =
       for {
-        events             <- EventStore.readEvents[E](aggregateId)
+        events            <- EventStore.readEvents[E](aggregateId)
         lastSequenceNumber = if (events.isEmpty) 0L else events.map(_.sequenceNumber).max
-        state              <- buildState(initialState, events)
+        state             <- buildState(initialState, events)
       } yield (lastSequenceNumber, state)
 
     private def buildState(initialState: S, events: Seq[Event[E]]): ZIO[Any, String, S] =

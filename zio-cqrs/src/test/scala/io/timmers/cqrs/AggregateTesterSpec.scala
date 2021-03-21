@@ -1,6 +1,7 @@
 package io.timmers.cqrs
 
 import io.timmers.cqrs.test.AggregateTest
+
 import zio.ZIO
 import zio.test.Assertion.{ anything, dies, equalTo }
 import zio.test._
@@ -11,7 +12,7 @@ object AggregateTesterSpec extends DefaultRunnableSpec {
 
   val aggregateId: String = "AggregateId"
 
-  def spec =
+  def spec: ZSpec[Environment, Failure] =
     suite("AggregateTester Spec")(
       testM("should return events for valid commands") {
         aggregate
