@@ -1,12 +1,13 @@
 package io.timmers.cqrs
 
+import io.timmers.cqrs.Aggregate.AggregateEnv
 import zio.test.Assertion.{ equalTo, hasSize, nothing }
 import zio.test.{ Assertion, TestResult, assert }
 import zio.{ Ref, Tag, UIO, ZEnv, ZIO, ZLayer }
 
 package object test {
   class AggregateTester[C <: Command, S, E <: Event.Payload: Tag](
-    val aggregate: Aggregate[C, S, E],
+    val aggregate: Aggregate[AggregateEnv[E], C, S],
     val commands: Seq[C]
   ) {
     def whenCommand(command: C): AggregateVerifier[S, E] = {
@@ -52,7 +53,7 @@ package object test {
   }
 
   implicit class AggregateTest[C <: Command, S, E <: Event.Payload: Tag](
-    val aggregate: Aggregate[C, S, E]
+    val aggregate: Aggregate[AggregateEnv[E], C, S]
   ) {
     def givenNoCommands(): AggregateTester[C, S, E] =
       new AggregateTester[C, S, E](aggregate, Seq())
