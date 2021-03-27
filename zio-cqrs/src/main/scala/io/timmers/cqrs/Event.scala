@@ -1,9 +1,9 @@
 package io.timmers.cqrs
 
-trait Event[+E <: Event.Payload] {
+trait Event[+P <: Event.Payload] {
   def sequenceNumber: Long
   def timestamp: Long
-  def payload: E
+  def payload: P
 }
 
 object Event {

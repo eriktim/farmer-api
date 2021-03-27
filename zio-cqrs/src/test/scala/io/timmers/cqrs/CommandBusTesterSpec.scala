@@ -1,14 +1,14 @@
 package io.timmers.cqrs
 
-import io.timmers.cqrs.Aggregate.AggregateEnv
+import io.timmers.cqrs.CommandBus.AggregateEnv
 import io.timmers.cqrs.test.AggregateTest
 import zio.ZIO
 import zio.test.Assertion.{ anything, dies, equalTo }
 import zio.test._
 
-object AggregateTesterSpec extends DefaultRunnableSpec {
-  private val aggregate: Aggregate[AggregateEnv[TestEvent], TestCommand, Option[Int]] =
-    Aggregate.create(None, handleCommand, handleEvent)
+object CommandBusTesterSpec extends DefaultRunnableSpec {
+  private val aggregate: CommandBus[AggregateEnv[TestEvent], TestCommand, String, Option[Int]] =
+    CommandBus.fromAggregate(None, handleCommand, handleEvent)
 
   val aggregateId: String = "AggregateId"
 

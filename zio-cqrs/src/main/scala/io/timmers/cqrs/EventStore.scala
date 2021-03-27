@@ -3,33 +3,33 @@ package io.timmers.cqrs
 import zio.{ Has, Tag, UIO, ZIO, ZLayer }
 
 object EventStore {
-  type EventStore[E <: Event.Payload] = Has[EventStore.Service[E]]
+  type EventStore[P <: Event.Payload] = Has[EventStore.Service[P]]
 
-  trait Service[E <: Event.Payload] {
-    def readEvents(aggregateId: String): ZIO[Any, String, Seq[Event[E]]]
+  trait Service[P <: Event.Payload] {
+    def readEvents(aggregateId: String): ZIO[Any, String, Seq[Event[P]]]
 
-    def persistEvents(events: Seq[Event[E]]): ZIO[Any, String, Unit]
+    def persistEvents(events: Seq[Event[P]]): ZIO[Any, String, Unit]
   }
 
-  def readEvents[E <: Event.Payload: Tag](
+  def readEvents[P <: Event.Payload: Tag](
     aggregateId: String
-  ): ZIO[EventStore[E], String, Seq[Event[E]]] =
+  ): ZIO[EventStore[P], String, Seq[Event[P]]] =
     ZIO.accessM(_.get.readEvents(aggregateId))
 
-  def persistEvents[E <: Event.Payload: Tag](
-    events: Seq[Event[E]]
-  ): ZIO[EventStore[E], String, Unit] =
+  def persistEvents[P <: Event.Payload: Tag](
+    events: Seq[Event[P]]
+  ): ZIO[EventStore[P], String, Unit] =
     ZIO.accessM(_.get.persistEvents(events))
 
-  def inMemory[E <: Event.Payload: Tag]: ZLayer[Any, Nothing, EventStore[E]] =
+  def inMemory[P <: Event.Payload: Tag]: ZLayer[Any, Nothing, EventStore[P]] =
     ZLayer.succeed(
-      new Service[E] {
-        private var storage = Seq[Event[E]]()
+      new Service[P] {
+        private var storage = Seq[Event[P]]()
 
-        override def readEvents(aggregateId: String): ZIO[Any, String, Seq[Event[E]]] =
+        override def readEvents(aggregateId: String): ZIO[Any, String, Seq[Event[P]]] =
           UIO(storage.filter(event => event.payload.aggregateId == aggregateId))
 
-        override def persistEvents(events: Seq[Event[E]]): ZIO[Any, String, Unit] =
+        override def persistEvents(events: Seq[Event[P]]): ZIO[Any, String, Unit] =
           UIO(storage ++= events)
       }
     )
