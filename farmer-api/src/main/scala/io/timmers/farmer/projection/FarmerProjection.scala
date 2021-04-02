@@ -1,9 +1,11 @@
 package io.timmers.farmer.projection
 
-import zio.UIO
+import io.timmers.cqrs.Projection
+import io.timmers.farmer.aggregate.Farmer.FarmerEvent
+import zio.ZIO
 
 object FarmerProjection {
-  case class Farmer(name: String)
+  val projection = Projection.create[FarmerEvent, Seq[Farmer]](Seq(), _ => ZIO.unit)
 
-  val farmers = UIO(List(Farmer("Henk")))
+  case class Farmer(name: String)
 }

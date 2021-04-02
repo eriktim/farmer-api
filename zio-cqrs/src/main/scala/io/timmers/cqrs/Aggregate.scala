@@ -17,8 +17,8 @@ trait Command {
 
 object CommandBus {
   type AggregateEnv[P <: Event.Payload]                    = EventStore.EventStore[P] with Clock
-  type CommandHandler[C <: Command, S, E <: Event.Payload] = (C, S) => ZIO[Any, String, Seq[E]]
-  type EventHandler[S, E <: Event.Payload]                 = (Event[E], S) => S
+  type CommandHandler[C <: Command, S, P <: Event.Payload] = (C, S) => ZIO[Any, String, Seq[P]]
+  type EventHandler[S, P <: Event.Payload]                 = (Event[P], S) => S
 
   case class AggregateEvent[E <: Event.Payload](sequenceNumber: Long, timestamp: Long, payload: E)
       extends Event[E]

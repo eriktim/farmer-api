@@ -10,9 +10,16 @@ trait Projection[R, E, Q, S] {
 }
 
 object Projection {
-  def create[P <: Payload: Tag](): Projection[EventStream[P], String, String, String] =
-    new Projection[EventStream[P], String, String, String] {
-      override def read(query: String): ZIO[EventStream[P], String, String] =
-        EventStream.subscribe[P]().run(Sink.foldLeft("TODO")((agg, _) => agg))
-    }
+  type EventHandler[E, P <: Event.Payload] = Event[P] => ZIO[Any, E, Any]
+
+  def create[P <: Payload: Tag, S](
+    initialState: S,
+    eventHandler: EventHandler[String, P]
+  ): ZIO[EventStream[P], String, Projection[Any, String, String, S]] = for {
+    _ <- EventStream.subscribe[P]().run(Sink.foreach(eventHandler.apply))
+  } yield new Projection[Any, String, String, S] {
+    override def read(query: String): ZIO[Any, String, S] =
+      ZIO.succeed(initialState)
+
+  }
 }

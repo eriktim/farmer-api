@@ -4,7 +4,6 @@ import io.timmers.cqrs.EventStore
 import io.timmers.farmer.aggregate.Farmer
 import io.timmers.farmer.aggregate.Farmer.FarmerCommand.CreateFarmer
 import io.timmers.farmer.aggregate.Farmer.FarmerEvent
-import io.timmers.farmer.projection.FarmerProjection
 import zhttp.http.HttpContent._
 import zhttp.http._
 import zhttp.service.Server
@@ -23,7 +22,7 @@ object Application extends App {
           case Chunked(_) => ZIO.fail(HttpError.NotImplemented("chunked"))
         }
       case Method.GET -> Root / "getFarmers" =>
-        FarmerProjection.farmers.as(Response.jsonString("[]"))
+        ZIO.succeed(Response.jsonString("[]"))
     }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] =
