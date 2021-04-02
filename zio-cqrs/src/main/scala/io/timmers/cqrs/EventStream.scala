@@ -11,6 +11,6 @@ object EventStream {
   }
 
   def subscribe[P <: Event.Payload: Tag](): ZStream[EventStream[P], String, Event[P]] =
-    ZStream.accessM(_.get.subscribe())
+    ZStream.accessStream(_.get.subscribe())
 
 }

@@ -8,7 +8,7 @@ import zio.test._
 
 object CommandBusTesterSpec extends DefaultRunnableSpec {
   private val aggregate: CommandBus[AggregateEnv[TestEvent], TestCommand, String, Option[Int]] =
-    CommandBus.fromAggregate(None, handleCommand, handleEvent)
+    CommandBus.create(None, handleCommand, handleEvent)
 
   val aggregateId: String = "AggregateId"
 

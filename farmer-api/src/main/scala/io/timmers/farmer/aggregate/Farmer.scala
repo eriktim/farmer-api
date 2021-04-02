@@ -8,7 +8,7 @@ import zio.ZIO
 
 object Farmer {
   val aggregate: CommandBus[AggregateEnv[FarmerEvent], FarmerCommand, String, Option[String]] =
-    CommandBus.fromAggregate(None, handleCommand, handleEvent)
+    CommandBus.create(None, handleCommand, handleEvent)
 
   sealed trait FarmerCommand extends Command
 

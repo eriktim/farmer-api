@@ -23,7 +23,7 @@ object CommandBus {
   case class AggregateEvent[E <: Event.Payload](sequenceNumber: Long, timestamp: Long, payload: E)
       extends Event[E]
 
-  def fromAggregate[C <: Command, S, P <: Event.Payload: Tag](
+  def create[C <: Command, S, P <: Event.Payload: Tag](
     initialState: S,
     commandHandler: CommandHandler[C, S, P],
     eventHandler: EventHandler[S, P]
