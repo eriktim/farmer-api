@@ -1,9 +1,10 @@
 package io.timmers.cqrs
 
 import io.timmers.cqrs.CommandBus.AggregateEnv
+import zio.stream.ZStream
 import zio.test.Assertion.{ equalTo, hasSize, nothing }
 import zio.test.{ Assertion, TestResult, assert }
-import zio.{ Ref, Tag, UIO, ZEnv, ZIO, ZLayer }
+import zio.{ Queue, Ref, Tag, UIO, ZEnv, ZIO, ZLayer }
 
 package object test {
   class AggregateTester[C <: Command, S, P <: Event.Payload: Tag](
@@ -11,16 +12,20 @@ package object test {
     val commands: Seq[C]
   ) {
     def whenCommand(command: C): AggregateVerifier[S, P] = {
-      val effect = Ref.make((Seq[Event[P]](), Seq[P]())).flatMap { storage =>
-        val eventStore = new InMemoryEventStore[P](storage)
-        val result = for {
-          _          <- ZIO.foreach_(commands)(aggregate.sendCommand)
-          state      <- aggregate.sendCommand(command)
-          lastEvents <- eventStore.lastEvents
-        } yield (state, lastEvents)
-        val layer: ZLayer[ZEnv, Nothing, EventStore.EventStore[P]] = ZLayer.succeed(eventStore)
-        result.provideCustomLayer(layer)
-      }
+      val effect =
+        Ref
+          .make((Seq[Event[P]](), Seq[P]()))
+          .zip(Queue.unbounded[Event[P]])
+          .flatMap { case (storage, queue) =>
+            val eventStore = new InMemoryEventStore[P](storage, queue)
+            val result = for {
+              _          <- ZIO.foreach_(commands)(aggregate.sendCommand)
+              state      <- aggregate.sendCommand(command)
+              lastEvents <- eventStore.lastEvents
+            } yield (state, lastEvents)
+            val layer: ZLayer[ZEnv, Nothing, EventStore.EventStore[P]] = ZLayer.succeed(eventStore)
+            result.provideCustomLayer(layer)
+          }
       new AggregateVerifier[S, P](effect)
     }
   }
@@ -62,16 +67,24 @@ package object test {
       new AggregateTester[C, S, P](aggregate, commands)
   }
 
-  class InMemoryEventStore[P <: Event.Payload: Tag](storageRef: Ref[(Seq[Event[P]], Seq[P])])
-      extends EventStore.Service[P] {
+  class InMemoryEventStore[P <: Event.Payload: Tag](
+    storageRef: Ref[(Seq[Event[P]], Seq[P])],
+    queue: Queue[Event[P]]
+  ) extends EventStore.Service[P]
+      with EventStream.Service[P] {
 
     override def readEvents(aggregateId: String): ZIO[Any, String, Seq[Event[P]]] =
       storageRef.get.map(_._1.filter(event => event.payload.aggregateId == aggregateId))
 
-    override def persistEvents(events: Seq[Event[P]]): ZIO[Any, String, Unit] =
-      storageRef.update(storage => (storage._1 ++ events, events.map(_.payload)))
+    override def persistEvents(events: Seq[Event[P]]): ZIO[Any, String, Unit] = for {
+      _ <- storageRef.update(storage => (storage._1 ++ events, events.map(_.payload)))
+      _ <- queue.offerAll(events)
+    } yield ()
 
     def lastEvents: UIO[Seq[P]] =
       storageRef.get.map(_._2)
+
+    override def subscribe(): ZStream[Any, String, Event[P]] =
+      ZStream.fromQueue(queue)
   }
 }

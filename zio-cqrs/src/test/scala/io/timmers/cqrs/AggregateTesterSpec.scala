@@ -6,7 +6,7 @@ import zio.ZIO
 import zio.test.Assertion.{ anything, dies, equalTo }
 import zio.test._
 
-object CommandBusTesterSpec extends DefaultRunnableSpec {
+object AggregateTesterSpec extends DefaultRunnableSpec {
   private val aggregate: CommandBus[AggregateEnv[TestEvent], TestCommand, String, Option[Int]] =
     CommandBus.create(None, handleCommand, handleEvent)
 
