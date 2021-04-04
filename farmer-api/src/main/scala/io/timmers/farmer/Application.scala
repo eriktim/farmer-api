@@ -28,23 +28,26 @@ object Application extends App {
       case Method.GET -> Root / "getFarmers" =>
         projection
           .read("TEST")
-          .bimap(HttpError.BadRequest, _ => Response.jsonString("[]"))
+          .bimap(HttpError.BadRequest, farmers => Response.jsonString(farmers.toString()))
     }
 
   def app(
     storageRef: Ref[Seq[Event[FarmerEvent]]],
-    queue: Queue[Event[FarmerEvent]]
-  ): ZIO[zio.ZEnv, Serializable, Unit] =
+    queue: Queue[Event[FarmerEvent]],
+    stateRef: Ref[Seq[Farmer]]
+  ): ZIO[zio.ZEnv, Nothing, ExitCode] =
     (for {
       port       <- system.envOrElse("PORT", "8080")
-      projection <- FarmerProjection.projection
-      _          <- Server.start(port.toInt, http(projection))
-    } yield ())
+      projection <- FarmerProjection.projection(stateRef)
+      server     <- Server.start(port.toInt, http(projection))
+    } yield server)
       .provideCustomLayer(EventStore.inMemory(storageRef, queue) ++ EventStream.inMemory(queue))
+      .exitCode
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = for {
+  override def run(args: List[String]): ZIO[zio.ZEnv, Nothing, ExitCode] = for {
     storageRef <- Ref.make(Seq[Event[FarmerEvent]]())
     queue      <- Queue.unbounded[Event[FarmerEvent]]
-    exitCode   <- app(storageRef, queue).exitCode
+    stateRef   <- Ref.make(Seq[Farmer]())
+    exitCode   <- app(storageRef, queue, stateRef)
   } yield exitCode
 }
