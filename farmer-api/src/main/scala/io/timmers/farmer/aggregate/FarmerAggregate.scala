@@ -2,11 +2,11 @@ package io.timmers.farmer.aggregate
 
 import io.timmers.cqrs.CommandBus.AggregateEnv
 import io.timmers.cqrs.{ Command, CommandBus, Event }
-import io.timmers.farmer.aggregate.Farmer.FarmerCommand.CreateFarmer
-import io.timmers.farmer.aggregate.Farmer.FarmerEvent.FarmerCreated
+import io.timmers.farmer.aggregate.FarmerAggregate.FarmerCommand.CreateFarmer
+import io.timmers.farmer.aggregate.FarmerAggregate.FarmerEvent.FarmerCreated
 import zio.ZIO
 
-object Farmer {
+object FarmerAggregate {
   val aggregate: CommandBus[AggregateEnv[FarmerEvent], FarmerCommand, String, Option[String]] =
     CommandBus.create(None, handleCommand, handleEvent)
 
